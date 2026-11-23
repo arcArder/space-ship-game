@@ -50,7 +50,16 @@ void EnemyManager::Draw() const {
         if (!enemy.active) {
             continue;
         }
-        DrawCircleV(enemy.pos, enemy.radius, GRAY);
+
+        if (enemy.kind == EnemyKind::Asteroid) {
+            DrawPoly(enemy.pos, 7, enemy.radius, 0.0f, GRAY);
+            DrawPolyLines(enemy.pos, 7, enemy.radius, 0.0f, LIGHTGRAY);
+        } else {
+            Vector2 nose{enemy.pos.x, enemy.pos.y + enemy.radius};
+            Vector2 leftWing{enemy.pos.x - enemy.radius, enemy.pos.y - enemy.radius};
+            Vector2 rightWing{enemy.pos.x + enemy.radius, enemy.pos.y - enemy.radius};
+            DrawTriangle(nose, leftWing, rightWing, MAROON);
+        }
     }
 }
 
