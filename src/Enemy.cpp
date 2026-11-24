@@ -18,15 +18,24 @@ EnemyManager::EnemyManager() {
 
 void EnemyManager::Reset() {
     enemies_.clear();
+    spawnTimer_ = 0.5f;
+}
 
-    Enemy firstEnemy;
-    firstEnemy.kind = EnemyKind::Asteroid;
-    firstEnemy.radius = 22.0f;
-    firstEnemy.pos = {static_cast<float>(SCREEN_WIDTH) * 0.5f, -firstEnemy.radius};
-    firstEnemy.vel = {0.0f, 130.0f};
-    firstEnemy.scoreValue = 100;
-    firstEnemy.active = true;
-    enemies_.push_back(firstEnemy);
+void EnemyManager::SpawnEnemy() {
+    Enemy enemy;
+    enemy.kind = (GetRandomValue(0, 1) == 0) ? EnemyKind::Asteroid : EnemyKind::Ship;
+    enemy.radius = (enemy.kind == EnemyKind::Asteroid) ? 22.0f : 18.0f;
+
+    const int minX = static_cast<int>(enemy.radius) + 8;
+    const int maxX = SCREEN_WIDTH - static_cast<int>(enemy.radius) - 8;
+    const float spawnX = static_cast<float>(GetRandomValue(minX, std::max(minX, maxX)));
+
+    enemy.pos = {spawnX, -enemy.radius};
+    enemy.vel = {0.0f, (enemy.kind == EnemyKind::Asteroid) ? 130.0f : 165.0f};
+    enemy.scoreValue = (enemy.kind == EnemyKind::Asteroid) ? 100 : 150;
+    enemy.active = true;
+
+    enemies_.push_back(enemy);
 }
 
 void EnemyManager::Update(float dt, float difficulty) {
@@ -37,12 +46,34 @@ void EnemyManager::Update(float dt, float difficulty) {
     const float safeDt = std::min(dt, 0.05f);
     const float safeDiff = std::max(0.1f, difficulty);
 
+    spawnTimer_ -= safeDt;
+    if (spawnTimer_ <= 0.0f) {
+        SpawnEnemy();
+        spawnTimer_ = 1.0f;
+    }
+
     for (Enemy& enemy : enemies_) {
         if (!enemy.active) {
             continue;
         }
         enemy.pos.y += enemy.vel.y * safeDiff * safeDt;
+        enemy.pos.x = std::clamp(
+            enemy.pos.x,
+            enemy.radius,
+            static_cast<float>(SCREEN_WIDTH) - enemy.radius
+        );
+
+        if (enemy.pos.y - enemy.radius > static_cast<float>(SCREEN_HEIGHT)) {
+            enemy.active = false;
+        }
     }
+
+    enemies_.erase(
+        std::remove_if(enemies_.begin(), enemies_.end(), [](const Enemy& e) {
+            return !e.active;
+        }),
+        enemies_.end()
+    );
 }
 
 void EnemyManager::Draw() const {

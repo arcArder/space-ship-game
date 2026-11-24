@@ -35,5 +35,8 @@ public:
     void Reset();
 
 private:
+    void SpawnEnemy();
+
     std::vector<Enemy> enemies_;
+    float spawnTimer_ = 0.0f;
 };
