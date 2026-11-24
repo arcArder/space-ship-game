@@ -73,3 +73,4 @@ build/
 .vscode/
 *.exe
 cmake-build-*/
+.idea/
