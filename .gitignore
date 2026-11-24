@@ -72,3 +72,4 @@ build/
 .vs/
 .vscode/
 *.exe
+cmake-build-*/
