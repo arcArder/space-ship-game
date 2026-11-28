@@ -1,7 +1,7 @@
 #include "Enemy.h"
 
 #include <algorithm>
-#include "Player.h"
+#include <cmath>
 
 Rectangle Enemy::GetBounds() const {
     return Rectangle{
@@ -19,6 +19,7 @@ EnemyManager::EnemyManager() {
 void EnemyManager::Reset() {
     enemies_.clear();
     spawnTimer_ = 0.5f;
+    waveElapsed_ = 0.0f;
 }
 
 void EnemyManager::SpawnEnemy() {
@@ -31,7 +32,10 @@ void EnemyManager::SpawnEnemy() {
     const float spawnX = static_cast<float>(GetRandomValue(minX, std::max(minX, maxX)));
 
     enemy.pos = {spawnX, -enemy.radius};
-    enemy.vel = {0.0f, (enemy.kind == EnemyKind::Asteroid) ? 130.0f : 165.0f};
+    enemy.vel = {
+        (enemy.kind == EnemyKind::Ship) ? 65.0f : 0.0f,
+        (enemy.kind == EnemyKind::Asteroid) ? 130.0f : 165.0f
+    };
     enemy.scoreValue = (enemy.kind == EnemyKind::Asteroid) ? 100 : 150;
     enemy.active = true;
 
@@ -45,18 +49,24 @@ void EnemyManager::Update(float dt, float difficulty) {
 
     const float safeDt = std::min(dt, 0.05f);
     const float safeDiff = std::max(0.1f, difficulty);
+    waveElapsed_ += safeDt;
 
-    spawnTimer_ -= safeDt;
+    spawnTimer_ -= safeDt * safeDiff;
     if (spawnTimer_ <= 0.0f) {
         SpawnEnemy();
-        spawnTimer_ = 1.0f;
+        spawnTimer_ = std::max(0.25f, 1.0f / safeDiff);
     }
 
     for (Enemy& enemy : enemies_) {
         if (!enemy.active) {
             continue;
         }
+
         enemy.pos.y += enemy.vel.y * safeDiff * safeDt;
+        if (enemy.kind == EnemyKind::Ship) {
+            enemy.pos.x += std::cos(waveElapsed_ * 3.0f + enemy.pos.y * 0.02f) * enemy.vel.x * safeDt;
+        }
+
         enemy.pos.x = std::clamp(
             enemy.pos.x,
             enemy.radius,
@@ -96,5 +106,14 @@ void EnemyManager::Draw() const {
 
 int EnemyManager::CheckCollisions(Player& player) {
     (void)player;
-    return 0;
+    int earnedScore = 0;
+
+    for (Enemy& enemy : enemies_) {
+        if (!enemy.active) {
+            continue;
+        }
+        
+    }
+
+    return earnedScore;
 }

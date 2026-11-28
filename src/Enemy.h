@@ -3,7 +3,7 @@
 #include <vector>
 #include "raylib.h"
 
-class Player;
+struct Player;
 
 enum class EnemyKind {
     Asteroid,
@@ -39,4 +39,5 @@ private:
 
     std::vector<Enemy> enemies_;
     float spawnTimer_ = 0.0f;
+    float waveElapsed_ = 0.0f;
 };
